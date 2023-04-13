@@ -1,0 +1,34 @@
+{
+  "name": "express-js-practice",
+  "version": "1.0.0",
+  "description": "express.js practice and exploration codes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/protickr/express-js-practice.git"
+  },
+  "keywords": [
+    "express.js",
+    "practice",
+    "node.js",
+    "rest",
+    "api",
+    "template"
+  ],
+  "author": "Protick Roy",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/protickr/express-js-practice/issues"
+  },
+  "homepage": "https://github.com/protickr/express-js-practice#readme",
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22"
+  }
+}
