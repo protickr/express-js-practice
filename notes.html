@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Notes</title>
+    <style type="text/css">
+        * {
+            box-sizing: border-box;
+            margin: 0;
+        }
+
+        main {
+            width: 900px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <pre>
+        <h2> express() </h2>
+
+        Content-Type: "application/json" => app.use(express.json());
+            receives request's payload in json format into request.body
+
+        Content-Type: "application/octet-stream" => app.use(express.raw());
+            receives request's payload in binary stream format into request.body at once
+
+        Content-Type: "text/plain" => app.use(express.text());
+            receives request's payload in plain text format into request.body 
+
+        Content-Type: "x-www-form-urlencoded" => app.use(express.urlencoded());
+            receives request's payload in url encoded format and decodes everything into request.body 
+
+
+        1. req.body
+        2. res.send('hello world!');
+
+            res.send, req.body
+            unlike raw node.js request body is collected in body property of request object whereas
+            in raw node.js request body is received in the server as a buffer stream
+            we had to listen to req.on('data') event and
+
+        3. 
+        app.use(express.static(`${__dirname}/public/`));
+            to link static folder to the application, so that we can access static assets by url from client side, 
+            in this case we don't need to specify the 'public'/static directory name in the url
+            app.use(express.static(`${__dirname}/public/`, {
+            index: name_of_default_file_in_static_dir_with_extension
+            }));
+
+        4. 
+        const Router = express.Router({
+            caseSensitive: true
+        });
+        app.use(Router);
+
+            - we can create different router object and bind them to the application by app.use(routerName); 
+            - express.Router() returns a 'Router' object which is case insensitive by default but we can specify
+                options in the construction functions' argument object.
+
+
+       <h2>Application  object</h2>
+        1. 
+        * application object's properties
+        * app.locals
+        stores all local variables of the application in the 'locals' property of the application object
+            const app = express();
+            app.locals.title = "My App"; 
+
+            const handle = (req, res) => {
+            res.send('welcome to home page !');
+                console.log(req.app.locals.title);
+            };
+            we can access locals property of the application object anywhere in the applicaiton using 
+            'req.app.locals'  
+
+        * app.mountpath
+            in nodejs, we can build multiple applications object by calling express() function multiple times 
+            and mount one application to another using app.use() method, providing a 'mountpath' and 
+            'sub-application's object reference 
+            
+                const app = express();
+                const admin = express();
+                app.use('/admin', admin);
+
+
+                admin.get('/', (req, res)=>{
+                    console.log("welcome to the admin application's homepage");
+                });
+
+                app.get('/', (req, res)=>{
+                    console.log("welcome to the main application's homepage");
+                    console.log(`admin application is mounted to the main 
+                        application in path, ${admin.mountpath}`);
+                });
+
+        * app object's events 
+            'mount' event - when a child app is mounted onto a parent app a 'mount' event is triggered and 
+            it could be captured by the child app using, 
+            
+            admin.on('mount', (parent)=>{
+                console.log(`admin was mounted to ${parent.locals.title}`);
+            });
+
+            app.use('/admin', admin);
+
+        * app object's methods 
+            1. app.all('/faq', (req, res)=>{
+                    res.send(`accepts requests of all methods e.g., GET, POST, PUT, DELETE`);
+                });
+
+            set's up a path that accepts requests in all available methods in http/s protocol 
+            
+            2.  app.delete('/posts', (req, res)=>{
+                    console.log('accepts requests only in DELETE method on route "/posts"');
+                });
+
+            3. app.disable('trust proxy');
+                disables a setting of the app - which requires a name from the app setting's table 
+
+            4. app.disabled('trust proxy') 
+                => returns true
+
+            5. app.enable('case sensitive routing'); 
+                => enables case sensitive routing e.g., /about !== /About
+
+            6. app.enabled('case sensitive routing');
+                => returns true
+
+            7. app.get("property name")
+                => returns property value of "property name"
+                also used to set request handler function to a specific route for the GET method 
+
+            8. app.set("property", "value");
+                a. is used to set a property with value to the application object
+
+                b. to set tempalte engine and default template file location of the app
+                    app.set('views', path.join(__dirname, 'views'));
+                        sets root file location for template files
+                        if it is omitted then default template file location is 
+                        process.cwd() +/views
+
+                    app.set('view engine', 'ejs');
+                        sets template engine 
+
+
+                    res.render('/path/to/template.ext');
+
+
+            9.  app.listen(8000, ()=> {
+                    console.log("listening on port 8000");
+                });
+                is used to listen to a specific port for incoming request
+                
+            10. app.param("parameterName", (req, res, next, parameter)=>{});
+
+                'middleware' injector - interceptor
+
+                Router.param('id', (req, res, next, id)=>{
+                    console.log(`I am called earler with id: ${id}`);
+                    const user = {
+                        userId: +id, 
+                        name: 'Bangladesh',
+                    };
+                    req.user = user;
+                    next(); 
+                });
+
+                Router.get('/users/:id', (req, res)=>{
+                    console.log(id);
+                });
+
+            11. app.path(); 
+                returns individual canonical path of an application in a express.js app 
+
+            12. app.route('/path').get().post().put().delete();
+                to group/gather HTTP requests methods for a single route
+                
+                app.route('/about/mission')
+                    .get((req, res)=>{
+
+                    }).post((req, res)=>{
+
+                    }).put((req, res)=>{
+
+                    }).delete((req, res)=>{
+
+                    }); 
+
+            13. app.engine();
+                    is used to set a template engine extension that will render tempaltes written in 
+                    template-engine-syntax to plain html webpage
+
+                    app.engine('html', require('ejs').renderFile);
+                        registers 'renderFile' method as callback that will be responsible for rendering 
+                        templates files which extension is '.html'
+
+                    app.get('/about', (req, res)=>{
+                        res.render('/about/index.html');
+                            takes '/about/index.html' as input and processes it through the 
+                            'renderFile' callback ans sends back the resultant html as response
+                    }); 
+
+        <h2>Request object </h2>
+
+            'req' - express request object which extends core node.js request object
+            client makes a http request to a server
+            with headers and payload 
+            
+            <h3> properties </h3>
+            1. req.baseUrl => at which route/path the express app was mounted
+
+            2. req.originalUrl => same as req.url but 
+                in case of 'sub-app' 'req.url' gets modified to sub-app's url, discards the baseUrl part
+                
+            3. req.path => request path only excluding query parameters/string
+
+            4. req.hostname => localhost => req.Headers.Host
+
+            5. req.ip => ip address => ::1
+
+            6. req.method => request method => returns request method in uppercase
+
+            7. req.protocol => http / https 
+
+            8. req.params => returns named properties of a route in a JavaScript object and property 
+                values are always will be in string
+
+            9. req.query => query parameters => returns query parameters in a JavaScript object and 
+                property values are always will be in string
+
+            10. req.body => with post and put request we attach some informations / payload to it, to receive 
+                    it properly we need to set request type in the server, e.g., 'app.use(express.json());' 
+                    and also specify 'Content-Type' in the request header from the client side, 
+                    e.g., 'Content-Type: "application/json"'
+                    always returns a 'JavaScript object '/ 'string' / 'buffer string' or undefined 
+                    if parser is not set properly
+
+            11. req.cookies => if client sends cookies but to parse cookies in the express server we need to 
+                    install 'cookie-parser' package and specify the cookie parser in the server. 
+                    const cookieParser = require('cookie-parser');
+                    app.use(cookieParser());
+
+                    
+            12. req.signedCookies => if sent cookes are signed 
+
+            13. req.secure => returns true if request is sent over https protocol or false otherwise
+
+            14. req.app => returns the app object on which the request was received
+
+            15. req.route => returns all info of a route on which the request 'req' object was attached to
+
+            <h3>methods</h3>
+            1. req.accepts('type'); => returns false or 'type' if client accepts response type or not 
+            2. req.get('header-property-name') => returns header's value 
+            
+        <h2>Response object </h2>
+            * server sets some headers in http response 
+            * 'res' - object
+
+            <h3>propreties</h3>
+                1. res.app => application object on which the req and res was generated and attached to 
+
+                2. res.headersSent => returns true or false depending on response was already sent 
+                    or not from the server 
+                
+                3. res.locals => response's local variable; only applicable to 'view'
+                    res.render('path/to/template.ext', {
+                        id: 1, 
+                        name: 'Bangladesh'
+                    });
+                    the object that we are sending to the render function will be available in the template 
+                    as properties,  id, name
+                    and that object will be stored in res.locals property  
+                
+            <h3>methods</h3>
+                1. res.cooke('name', 'value');
+                    => sets cookies (name, value) in the response
+                    => res.cookie("token", jwt_token_value, {
+                        // cookie options
+                    });
+
+                2. res.clearCookie('name'); => clear cookie from the client upon response receiving 
+                
+                3. res.end(); => disconnects client connection; ends the response 
+                4. res.send("some data") 
+                    => sends http response and end() the response; usually used to send data in the response
+                
+                5. res.json(JavaScript-Object) => stringifies the JavaScript-Object into json string, 
+                    => sets response header 'Content-Type' to 'application/json' sends that
+                
+                6. res.status(200) 
+                    => sets http response status to a specific http response status value e.g., 200
+                        it does not ends the response so 
+                        res.status(200); 
+                        res.end();
+
+                7. res.sendStatus() 
+                    => sets and sends i.e., 'res.send()' a http response status value.
+
+                8. res.render('/path/to/template') 
+                    =>  renders a view and sends it
+                
+                9. res.format() => http content-type negotiator 
+                    app.get('/notice', (req, res) => {
+                        res.format({
+                        'text/plain': () => {
+                            res.send('notice page');
+                        },
+                        'text/html': () => {
+                            res.render('about/mission/home.ejs', {
+                            id: 1,
+                            name: Bangladesh,
+                            });
+                        },
+                        'application/json': () => {
+                            res.json({
+                            message: 'notice page',
+                            });
+                        },
+                        default: () => {
+                            res.status(406);
+                            res.send('Not acceptable');
+                        },
+                        });
+                    });
+
+                10. res.location() => sets the HTTP 'Location' response-header to which client should redirect but the 
+                    server itself does not redirect the client to that 'Location'
+
+                11. res.redirect('/test') => redirects client to a path 
+
+                12. res.get("header-property-name") => returns response header propertie's value
+                13. res.set("header-property-name", 'value');
+
+        <h2> Middleware </h2>
+            * middleware can call next() to pass request to next middleware or call res.send() to send response to the 
+                client.
+
+            * middleware can throw error, in case of an error the request does not go through next Middleware instead it 
+                goes to error handler middleware.
+            
+            * middleware can modify request or response object 
+
+            * types of middleware 
+                1. application level middleware,
+                    const loggerMiddleware = (req, res, next)=>{
+                        console.log(`${new Date(Date.now()).toLocaleString()} - ${req.protocol}://${req.ip}${req.originalUrl}`);
+                        next('test');
+                    };
+                    app.use(loggerMiddleware);
+
+                2. router level middleware,
+                        const adminRouter = express.Router({
+                            caseSensitive: true
+                        });
+                    app.use('/admin', adminRouter);
+                    adminRouter.use(loggerMiddleware);
+
+                3. error handling middleware 
+                
+                    // 4 parameters signifies error handling middleware in express
+                    const errorHandlerMiddleware = (error, req, res, next) => {
+                        console.log(error.message);
+                        res.status(500);
+                        res.send('There was a server side error');
+                    };
+                    Router.use(errorHandlerMiddleware);
+
+                4. built in middlewares 
+                    e.g., express.json(), express.static();
+
+                    app.use(express.json());
+                
+
+                5. third party middleware
+                    third party packages provides us with middleware which we can hook to the application
+
+                    const cookeParser = require("cookie-parser"); 
+                    app.use(cookieParser())
+                    cookieParser(); => returns a middleware function
+   
+            * in case of success we must use next() with no value passed to it or else it will be 
+                counted as 
+                
+            * configurable middleware 
+                write a higher order function that returns a closure which accepts req, res, next 
+
+        <h2>Router Object</h2>
+            * express app object has a builtin router object that handles app.get, app.post, app.delete etc. routes 
+            
+            * you can create a new router object by calling 
+                const adminRouter = express.Router()
+
+            * you can add a router to the app object by, 
+                app.use('/admin', adminRouter); 
+                => all request to '/admin' will be routed to 'adminRouter'
+
+            * you can add a middleware to a router by using, <b> Router.all() </b>
+                const log = (req, res, next) => {
+                    console.log(`I am being called at, ${req.originalUrl}`);
+                    next();
+                };
+                adminRouter.all("*", middleware);
+
+            * you can also add a middleware for a router parameter by using, <b> Router.param() </b>
+                e.g, 
+                    const publicRouter = express.Router();
+                    publicRouter.param('user', (req, res, next, userId)=>{
+                        req.userName = userId && typeof userId === 'string' && userId === '1' ? 'Admin' : 'Anonymous';
+                        next();
+                    });
+                     
+                    publicRouter.get('/:user', (req, res)=>{
+                        res.send(`Hello ${req.userName}`);
+                    });
+                    
+                => any route of publicRouter that has "user" parameter in it will receive the req after being processed 
+                    through the 'publicRouter.param()' middleware 
+
+                => if multiple url's with same router parameter of a single router matches router.param(), in that case 
+                    router.param() is only called once 
+            
+            * you can also group routes together by 
+                Router.route('/path').get().post().put().delete()
+
+            * Router.use();
+                => to add middleware, other routers etc.
+            
+            * Route/path with patters or regex is also available 
+                to use regex start and end the path-pattern with forward slash 
+                
+                
+        </pre>
+    </main>
+</body>
+
+</html>
