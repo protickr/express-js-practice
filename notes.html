@@ -435,7 +435,61 @@
             * Route/path with patters or regex is also available 
                 to use regex start and end the path-pattern with forward slash 
                 
-                
+        <h2>Error handling</h2>
+            * error handling is different for synchronous and asynchronous code 
+            * synchronous
+                express framework by default handles errors in synchronous code, 
+                renders an html error response with stack trace in development environment
+
+                1. default error handling middleware as last middleware which takes 4 parameters i.e., err, req, res, next
+                    to override default error handling middleware 
+                    => attach an error handler middleware at the very last of the middleware chain 
+
+                2. 404 not found error handler 
+                    attach a middleware at the end of all routes, check if requested path is available in the route list 
+                    and send appropriate response with error message and status code 
+                    or you can just pass over to next middleware with an error message 
+                    next("Requested URL was not found !");
+
+                3. as soon as 'res.write()' is called - starts streaming response to the client 
+                    error handling during response streaming 
+
+                    app.get('/about', (req, res, next)=>{
+                        for(let i = 0; i <=5; i++){
+                            if(i == 5){
+                                next("An error occured");
+                            }else{
+                                res.write('a');
+                            }
+                        }
+                        res.end();
+                    });
+
+                    app.use((err, req, res, next) => {
+                        if (res.headersSent) {
+                          next("There was a problem !");
+                          
+                        } else {
+                          if (err.message) res.status(500).send(err.message);
+                          else res.status(500).send('there was an error !');
+                        }
+                      });
+
+            * asynchronous
+                app.get('/', (req, res, next) => {
+                    fs.readFile('file.txt', (error, data)=>{
+                        if(error){
+                            next(error);
+                        }else{
+                            res.send(data);
+                        }
+                    });
+                });
+
+                Note: 
+                    1. next(err); will always call an error handler not the immediate middleware even if it exists
+                    2. use try catch to catch errors and call next(error)
+                    3. we can chain middlewares by adding them to an array of middlewares                
         </pre>
     </main>
 </body>
