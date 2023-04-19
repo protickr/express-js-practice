@@ -489,7 +489,45 @@
                 Note: 
                     1. next(err); will always call an error handler not the immediate middleware even if it exists
                     2. use try catch to catch errors and call next(error)
-                    3. we can chain middlewares by adding them to an array of middlewares                
+                    3. we can chain middlewares by adding them to an array of middlewares
+                    
+        <h2>File uploading</h2>
+            const upload = multer({
+                dest: "./uploads/"
+            });
+        
+            1. single file upload
+                app.post('/', upload.single('avatar'), (req, res, next) => {
+                    res.send('post request received');
+                });
+            
+            2. multiple file upload at once
+                app.post('/', upload.array('avatar', 10), (req, res, next) => {
+                    res.send('post request received');
+                });
+            
+            3. multiple file upload using multiple input fields
+                app.post('/', upload.fields([
+                    {name: 'avatar', maxCount: 10},
+                    { name: 'gallery', maxCount: 4 } 
+                ]), (req, res, next) => {
+                    res.send('post request received');
+                });
+
+            * you can also use multer to parse multipart/form-data into express's req.body by 
+                upload.none(),
+
+            4. file upload validation 
+            const upload = multer({
+                dest: "./uploads/", 
+                limits: {
+                    fileSize: 1000000 // 1 megabyte
+                }
+            });
+            
+
+            
+            
         </pre>
     </main>
 </body>
